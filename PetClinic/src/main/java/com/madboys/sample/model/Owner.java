@@ -35,6 +35,8 @@ import org.springframework.core.style.ToStringCreator;
  * A simple bean representing owner of a pet
  *
  */
+
+
 @Entity
 @Table(name="owners")
 public class Owner extends Person{
@@ -81,7 +83,60 @@ public class Owner extends Person{
 		this.pets = pets;
 	}
 	
-	 
+	protected Set<Pet> getPetsInternal(){
+		if(this.pets == null)
+			pets = new HashSet<Pet>();
+		return pets;
+	}
+	
+	public List<Pet> getPets(){
+		List<Pet> sortedPets = new ArrayList<Pet>(getPetsInternal());
+		PropertyComparator.sort(sortedPets,new MutableSortDefinition("name",true,true));
+		return Collections.unmodifiableList(sortedPets);
+	}
+	
+	public void addPet(Pet pet){
+		getPetsInternal().add(pet);
+		pet.setOwner(this);
+	}
+	
+	
+	/**
+	 * Return the Pet for given name, null if none found for this owner
+	 * @param name
+	 * @return
+	 */
+	public Pet getPet(String name){
+		return getPet(name,false);
+	}
+	
+	public Pet getPet(String name,boolean ignoreNew){
+		name = name.toLowerCase();
+		for(Pet pet:getPetsInternal()){
+			if(!ignoreNew || !pet.isNew()){
+				String compName = pet.getName();
+				compName = compName.toLowerCase();
+				if(compName.equals(name)){
+					return pet;
+				}
+			}
+		}
+		return null;
+	}
+	
+	
+	
+	@Override
+	public String toString(){
+		return new ToStringCreator(this).append("id",this.getId())
+				.append("new",this.isNew())
+				.append("lastName",this.getLastName())
+				.append("firstName",this.getFirstName())
+				.append("address",this.address)
+				.append("city",this.city)
+				.append("telephone",this.telephone).toString();
+		
+	}
 	
 }
 
